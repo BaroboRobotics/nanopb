@@ -1334,12 +1334,13 @@ class ProtoFile:
 
         for msg in self.messages:
             for index, oneof in msg.oneofs.items():
-                yield 'inline bool visit_{0}_{1}(auto&& vis, {0}& msg) {{\n'.format(msg.name, oneof.name)
-                # TODO: static_assert that vis implements all bounded types
+                yield 'template <class Visitor>\n'
+                yield 'bool visit_{0}_{1}(Visitor&& v, {0}& msg) {{\n'.format(msg.name, oneof.name)
+                # TODO: static_assert that v implements all bounded types
                 yield '    switch (msg.which_%s) {\n' % oneof.name
                 for field in oneof.fields:
                     yield '        case %s:\n' % field.tag_identifier
-                    yield '            std::forward<decltype(vis)>(vis)(msg.%s.%s);\n' % (oneof.name, field.name)
+                    yield '            std::forward<Visitor>(v)(msg.%s.%s);\n' % (oneof.name, field.name)
                 yield '        default:\n'
                 yield '            return false;\n'
                 yield '    }\n'
