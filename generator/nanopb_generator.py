@@ -234,6 +234,7 @@ class Field:
         self.struct_name = struct_name
         self.union_name = None
         self.name = desc.name
+        self.tag_identifier = '%s_%s_tag' % (self.struct_name, self.name)
         self.default = None
         self.max_size = None
         self.max_count = None
@@ -485,8 +486,7 @@ class Field:
 
     def tags(self):
         '''Return the #define for the tag number of this field.'''
-        identifier = '%s_%s_tag' % (self.struct_name, self.name)
-        return '#define %-40s %d\n' % (identifier, self.tag)
+        return '#define %-40s %d\n' % (self.tag_identifier, self.tag)
 
     def pb_field_t(self, prev_field_name):
         '''Return the pb_field_t initializer to use in the constant array.
