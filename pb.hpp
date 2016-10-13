@@ -1,7 +1,7 @@
 // Common supporting code for Nanopb-generated C++ code.
 
-#ifndef PB_HXX_INCLUDED
-#define PB_HXX_INCLUDED
+#ifndef PB_HPP_INCLUDED
+#define PB_HPP_INCLUDED
 
 #include <pb.h>
 
