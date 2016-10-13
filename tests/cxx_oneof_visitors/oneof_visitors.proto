@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package foo.bar;
+
+message One { required float value = 1; }
+message Two { required float value = 1; }
+message Three { required float value = 1; }
+
+message MessageV1 {
+    oneof payload {
+        One one = 1;
+        Two two = 3;
+    }
+
+    optional float unbounded = 2;
+}
+
+message MessageV2 {
+    oneof payload {
+        Two two = 3;
+        Three three = 4;
+    }
+
+    optional float unbounded = 2;
+}
