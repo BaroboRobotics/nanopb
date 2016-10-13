@@ -1325,6 +1325,7 @@ class ProtoFile:
 
         yield '#include "%s"\n\n' % headername
         yield '#include <utility>\n\n'
+        yield '#include <cstddef>\n\n'
         yield '/* @@protoc_insertion_point(includes) */\n'
 
         yield '#if PB_PROTO_HEADER_VERSION != 30\n'
@@ -1337,12 +1338,14 @@ class ProtoFile:
         for msg in self.messages:
             for index, oneof in msg.oneofs.items():
                 yield 'template <class Visitor>\n'
-                yield 'bool visit_{0}_{1}(Visitor&& v, {0}& msg) {{\n'.format(msg.name, oneof.name)
+                yield 'bool visit(Visitor&& v, decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
                 # TODO: static_assert that v implements all bounded types
-                yield '    switch (msg.which_%s) {\n' % oneof.name
+                yield '    auto tagp = reinterpret_cast<const char*>(&oneof) - offsetof({0}, {1}) + offsetof({0}, which_{1});\n'.format(msg.name, oneof.name)
+                yield '    switch (*reinterpret_cast<const pb_size_t*>(tagp)) {\n'
                 for field in oneof.fields:
                     yield '        case %s:\n' % field.tag_identifier
-                    yield '            std::forward<Visitor>(v)(msg.%s.%s);\n' % (oneof.name, field.name)
+                    yield '            std::forward<Visitor>(v)(oneof.%s);\n' % field.name
+                    yield '            break;\n'
                 yield '        default:\n'
                 yield '            return false;\n'
                 yield '    }\n'
