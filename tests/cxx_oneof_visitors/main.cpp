@@ -3,26 +3,36 @@
 
 #include "oneof_visitors.pb.hpp"
 
-TEST_CASE("nanopb::visit() calls visitors when appropriate") {
-    struct {
-        pb_size_t tag = 0;
-        float value = 0.f;
-        bool check(pb_size_t t, float v) const { return tag == t && value == v; }
-        void operator()(foo_bar_One& one) {
-            tag = foo_bar_MessageV1_one_tag;
-            value = one.value;
-        }
-        void operator()(foo_bar_Two& two) {
-            tag = foo_bar_MessageV1_two_tag;
-            value = two.value;
-        }
-    } visitor;
+struct TestVisitor {
+    pb_size_t tag = 0;
+    float value = 0.f;
+    bool check(pb_size_t t, float v) const { return tag == t && value == v; }
 
+    void operator()(foo_bar_One& one) {
+        tag = foo_bar_MessageV1_one_tag;
+        value = one.value;
+    }
+
+    void operator()(foo_bar_Two& two) {
+        tag = foo_bar_MessageV1_two_tag;
+        value = two.value;
+    }
+
+    void operator()(foo_bar_Three& three) {
+        tag = foo_bar_MessageV2_three_tag;
+        value = three.value;
+    }
+};
+
+TEST_CASE("visit() calls visitors when appropriate") {
+    TestVisitor visitor {};
     foo_bar_MessageV1 message {};
 
     REQUIRE(visitor.check(0, 0.f));  // visitor has not visited anything yet
 
     SUBCASE("visit() ignores nil field tag") {
+        // Note that this case should be impossible to reproduce from `pb_decode`d data: Nanopb's
+        // documentation says it treats a 0 field tag as an EOF in the stream.
         message.which_payload = 0;
         message.payload.one = {123.f};
         CHECK_FALSE(nanopb::visit(visitor, message.payload));
