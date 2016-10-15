@@ -1335,12 +1335,16 @@ class ProtoFile:
 
         yield 'namespace nanopb {\n\n'
 
+        if self.messages:
+            yield '// Typesafe oneof visit functions\n\n'
         for msg in self.messages:
             for index, oneof in msg.oneofs.items():
                 yield 'template <class Visitor>\n'
                 yield 'bool visit(Visitor&& v, decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
                 # TODO: static_assert that v implements all bounded types
-                yield '    auto tagp = reinterpret_cast<const char*>(&oneof) - offsetof({0}, {1}) + offsetof({0}, which_{1});\n'.format(msg.name, oneof.name)
+                yield '    auto tagp = reinterpret_cast<const char*>(&oneof)\n'
+                yield '            - offsetof(%s, %s)\n' % (msg.name, oneof.name)
+                yield '            + offsetof(%s, which_%s);\n' % (msg.name, oneof.name)
                 yield '    switch (*reinterpret_cast<const pb_size_t*>(tagp)) {\n'
                 for field in oneof.fields:
                     yield '        case %s:\n' % field.tag_identifier
