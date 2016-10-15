@@ -74,7 +74,7 @@ TEST_CASE("visit() calls visitors when appropriate") {
     }
 }
 
-TEST_CASE("oneof schemas can be updated gracefully") {
+TEST_CASE("removed and added oneof fields are decodeable by 'incompatible' clients") {
     TestVisitor visitor {};
     std::array<pb_byte_t, 128> buf {};
     auto os = pb_ostream_from_buffer(buf.data(), buf.size());
@@ -83,22 +83,22 @@ TEST_CASE("oneof schemas can be updated gracefully") {
 
     REQUIRE(visitor.check(0, 0.f));
 
-    SUBCASE("message with obsolete field can be decoded by new clients") {
+    SUBCASE("message with removed oneof field can be decoded by new clients") {
         messageV1.which_payload = foo_bar_MessageV1_one_tag;
         messageV1.payload.one = {123.f};
-        REQUIRE(pb_encode(&os, foo_bar_MessageV1_fields, &messageV1));
+        REQUIRE(nanopb::encode(os, messageV1));
         auto is = pb_istream_from_buffer(buf.data(), os.bytes_written);
-        CHECK(pb_decode(&is, foo_bar_MessageV2_fields, &messageV2));
+        CHECK(nanopb::decode(is, messageV2));
         CHECK_FALSE(nanopb::visit(visitor, messageV2.payload));
         CHECK(visitor.check(0, 0.f));
     }
 
-    SUBCASE("message with new field can be decoded by old clients") {
+    SUBCASE("message with added oneof field can be decoded by old clients") {
         messageV2.which_payload = foo_bar_MessageV2_three_tag;
         messageV2.payload.three = {234.f};
-        REQUIRE(pb_encode(&os, foo_bar_MessageV2_fields, &messageV2));
+        REQUIRE(nanopb::encode(os, messageV2));
         auto is = pb_istream_from_buffer(buf.data(), os.bytes_written);
-        CHECK(pb_decode(&is, foo_bar_MessageV1_fields, &messageV1));
+        CHECK(nanopb::decode(is, messageV1));
         CHECK_FALSE(nanopb::visit(visitor, messageV1.payload));
         CHECK(visitor.check(0, 0.f));
     }
@@ -106,9 +106,9 @@ TEST_CASE("oneof schemas can be updated gracefully") {
     SUBCASE("old message with compatible fields can be decoded and visited by new clients") {
         messageV1.which_payload = foo_bar_MessageV1_two_tag;
         messageV1.payload.one = {345.f};
-        REQUIRE(pb_encode(&os, foo_bar_MessageV1_fields, &messageV1));
+        REQUIRE(nanopb::encode(os, messageV1));
         auto is = pb_istream_from_buffer(buf.data(), os.bytes_written);
-        CHECK(pb_decode(&is, foo_bar_MessageV2_fields, &messageV2));
+        CHECK(nanopb::decode(is, messageV2));
         CHECK(nanopb::visit(visitor, messageV2.payload));
         CHECK(visitor.check(foo_bar_MessageV2_two_tag, 345.f));
     }
@@ -116,9 +116,9 @@ TEST_CASE("oneof schemas can be updated gracefully") {
     SUBCASE("new message with compatible fields can be decoded and visited by old clients") {
         messageV2.which_payload = foo_bar_MessageV2_two_tag;
         messageV2.payload.two = {456.f};
-        REQUIRE(pb_encode(&os, foo_bar_MessageV2_fields, &messageV2));
+        REQUIRE(nanopb::encode(os, messageV2));
         auto is = pb_istream_from_buffer(buf.data(), os.bytes_written);
-        CHECK(pb_decode(&is, foo_bar_MessageV1_fields, &messageV1));
+        CHECK(nanopb::decode(is, messageV1));
         CHECK(nanopb::visit(visitor, messageV1.payload));
         CHECK(visitor.check(foo_bar_MessageV1_two_tag, 456.f));
     }

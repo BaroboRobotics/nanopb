@@ -1356,6 +1356,13 @@ class ProtoFile:
                 yield '    return true;\n'
                 yield '}\n\n'
 
+        if self.messages:
+            yield '// Typesafe message field array pointer lookup functions\n\n'
+            for msg in self.messages:
+                yield 'template <> constexpr const pb_field_t* '
+                yield 'field_array_ptr<%s>() { return %s_fields; }\n' % (msg.name, msg.name)
+            yield '\n'
+
         yield '}  // nanopb\n\n'
 
         # End of header
