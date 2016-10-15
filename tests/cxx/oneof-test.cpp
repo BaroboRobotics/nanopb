@@ -1,7 +1,6 @@
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 
-#include "oneof_visitors.pb.hpp"
+#include "oneof-test.pb.hpp"
 
 #include "pb_encode.h"
 #include "pb_decode.h"
