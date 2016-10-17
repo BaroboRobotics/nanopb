@@ -1336,6 +1336,13 @@ class ProtoFile:
         yield 'namespace nanopb {\n\n'
 
         if self.messages:
+            yield '// Typesafe message field array pointer lookup functions\n\n'
+            for msg in self.messages:
+                yield 'template <> constexpr const pb_field_t* '
+                yield 'field_array_ptr<{0}>(const {0}&) {{ return {0}_fields; }}\n'.format(msg.name)
+            yield '\n'
+
+        if self.messages:
             yield '// Typesafe oneof visit functions\n\n'
         for msg in self.messages:
             for index, oneof in msg.oneofs.items():
@@ -1355,13 +1362,6 @@ class ProtoFile:
                 yield '    }\n'
                 yield '    return true;\n'
                 yield '}\n\n'
-
-        if self.messages:
-            yield '// Typesafe message field array pointer lookup functions\n\n'
-            for msg in self.messages:
-                yield 'template <> constexpr const pb_field_t* '
-                yield 'field_array_ptr<%s>() { return %s_fields; }\n' % (msg.name, msg.name)
-            yield '\n'
 
         yield '}  // nanopb\n\n'
 
