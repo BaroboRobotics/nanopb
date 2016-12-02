@@ -1346,13 +1346,22 @@ class ProtoFile:
             yield '// Typesafe oneof visit functions\n\n'
         for msg in self.messages:
             for index, oneof in msg.oneofs.items():
+                yield 'constexpr const pb_size_t& which(const decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
+                yield '    return *reinterpret_cast<const pb_size_t*>(\n'
+                yield '            reinterpret_cast<const char*>(&oneof)\n'
+                yield '            - offsetof(%s, %s)\n' % (msg.name, oneof.name)
+                yield '            + offsetof(%s, which_%s));\n' % (msg.name, oneof.name)
+                yield '}\n\n'
+                # Constant tag accessor
+
+                yield 'constexpr pb_size_t& which(decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
+                yield '    return const_cast<pb_size_t&>(which(static_cast<const decltype(%s().%s)>(oneof)));\n' % (msg.name, oneof.name)
+                yield '}\n\n'
+                # Mutable tag accessor, just abuses the constant version for the win
+
                 yield 'template <class Visitor>\n'
                 yield 'bool visit(Visitor&& v, const decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
-                # TODO: static_assert that v implements all bounded types
-                yield '    auto tagp = reinterpret_cast<const char*>(&oneof)\n'
-                yield '            - offsetof(%s, %s)\n' % (msg.name, oneof.name)
-                yield '            + offsetof(%s, which_%s);\n' % (msg.name, oneof.name)
-                yield '    switch (*reinterpret_cast<const pb_size_t*>(tagp)) {\n'
+                yield '    switch (which(oneof)) {\n'
                 for field in oneof.fields:
                     yield '        case %s:\n' % field.tag_identifier
                     yield '            std::forward<Visitor>(v)(oneof.%s);\n' % field.name
@@ -1362,6 +1371,14 @@ class ProtoFile:
                 yield '    }\n'
                 yield '    return true;\n'
                 yield '}\n\n'
+
+                for field in oneof.fields:
+                    # FIXME: If the oneof is not an "alternative" (i.e., it contains two fields of
+                    # the same C type), this will result in a compiler error. What to do?
+                    yield 'inline void assign(decltype(%s().%s)& oneof, const %s& field) {\n' % (msg.name, oneof.name, field.ctype)
+                    yield '    which(oneof) = %s;\n' % field.tag_identifier
+                    yield '    oneof.%s = field;\n' % field.name
+                    yield '}\n\n'
 
         yield '}  // nanopb\n\n'
 

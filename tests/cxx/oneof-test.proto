@@ -7,7 +7,7 @@ message Two { required float value = 1; }
 message Three { required float value = 1; }
 
 message MessageV1 {
-    oneof payload {
+    oneof arg {
         One one = 1;
         Two two = 3;
     }
@@ -16,7 +16,7 @@ message MessageV1 {
 }
 
 message MessageV2 {
-    oneof payload {
+    oneof arg {
         Two two = 3;
         Three three = 4;
     }
