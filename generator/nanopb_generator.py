@@ -1355,9 +1355,13 @@ class ProtoFile:
                 # Constant tag accessor
 
                 yield 'constexpr pb_size_t& which(decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
-                yield '    return const_cast<pb_size_t&>(which(static_cast<const decltype(%s().%s)>(oneof)));\n' % (msg.name, oneof.name)
+                yield '    return *reinterpret_cast<pb_size_t*>(\n'
+                yield '            reinterpret_cast<char*>(&oneof)\n'
+                yield '            - offsetof(%s, %s)\n' % (msg.name, oneof.name)
+                yield '            + offsetof(%s, which_%s));\n' % (msg.name, oneof.name)
                 yield '}\n\n'
-                # Mutable tag accessor, just abuses the constant version for the win
+                # Mutable tag accessor. I once const_casted the constant tag accessor to implement
+                # this one. My wages of sin were three days of debugging.
 
                 yield 'template <class Visitor>\n'
                 yield 'bool visit(Visitor&& v, const decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
