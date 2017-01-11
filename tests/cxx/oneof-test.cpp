@@ -76,13 +76,27 @@ TEST_CASE("visit() calls visitors when appropriate") {
 TEST_CASE("assign() works") {
     foo_bar_MessageV1 messageV1 {};
 
-    nanopb::assign(messageV1.arg, foo_bar_One{123.f});
-    CHECK(messageV1.which_arg == foo_bar_MessageV1_one_tag);
-    CHECK(messageV1.arg.one.value == 123.f);
+    SUBCASE("with temporaries") {
+        nanopb::assign(messageV1.arg, foo_bar_One{123.f});
+        CHECK(messageV1.which_arg == foo_bar_MessageV1_one_tag);
+        CHECK(messageV1.arg.one.value == 123.f);
 
-    nanopb::assign(messageV1.arg, foo_bar_Two{456.f});
-    CHECK(messageV1.which_arg == foo_bar_MessageV1_two_tag);
-    CHECK(messageV1.arg.two.value == 456.f);
+        nanopb::assign(messageV1.arg, foo_bar_Two{456.f});
+        CHECK(messageV1.which_arg == foo_bar_MessageV1_two_tag);
+        CHECK(messageV1.arg.two.value == 456.f);
+    }
+
+    SUBCASE("with self-assignment") {
+        messageV1.arg.one.value = 234.f;
+        nanopb::assign(messageV1.arg, messageV1.arg.one);
+        CHECK(messageV1.which_arg == foo_bar_MessageV1_one_tag);
+        CHECK(messageV1.arg.one.value == 234.f);
+
+        messageV1.arg.two.value = 567.f;
+        nanopb::assign(messageV1.arg, messageV1.arg.two);
+        CHECK(messageV1.which_arg == foo_bar_MessageV1_two_tag);
+        CHECK(messageV1.arg.two.value == 567.f);
+    }
 }
 
 TEST_CASE("removed and added oneof fields are decodeable by 'incompatible' clients") {
