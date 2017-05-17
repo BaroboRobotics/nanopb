@@ -3,7 +3,13 @@
 #ifndef PB_ASIO_HPP_INCLUDED
 #define PB_ASIO_HPP_INCLUDED
 
+#include <pb.hpp>
+
+#include <beast/core/buffer_concepts.hpp>
+
 #include <boost/asio/buffer.hpp>
+
+#include <type_traits>
 
 namespace nanopb {
 
@@ -32,6 +38,20 @@ inline pb_istream_t istream_from_dynamic_buffer(DynamicBuffer& dynabuf) {
         return n == count;
     };
     return pb_istream_t{reader, &dynabuf, dynabuf.size()};
+}
+
+template <class DynamicBuffer, class Struct>
+std::enable_if_t<beast::is_DynamicBuffer<DynamicBuffer>::value, bool>
+decode(DynamicBuffer& dynabuf, Struct& dest_struct) {
+    auto istream = istream_from_dynamic_buffer(dynabuf);
+    return decode(istream, dest_struct);
+}
+
+template <class DynamicBuffer, class Struct>
+std::enable_if_t<beast::is_DynamicBuffer<DynamicBuffer>::value, bool>
+encode(DynamicBuffer& dynabuf, const Struct& src_struct) {
+    auto ostream = ostream_from_dynamic_buffer(dynabuf);
+    return encode(ostream, src_struct);
 }
 
 }  // nanopb
