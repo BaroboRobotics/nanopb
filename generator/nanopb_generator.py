@@ -1363,18 +1363,22 @@ class ProtoFile:
                 # Mutable tag accessor. I once const_casted the constant tag accessor to implement
                 # this one. My wages of sin were three days of debugging.
 
-                yield 'template <class Visitor>\n'
-                yield 'bool visit(Visitor&& v, const decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
-                yield '    switch (which(oneof)) {\n'
+                yield 'namespace _ {\n'
+                yield 'template <>\n'
+                yield 'struct visitor_impl<decltype(%s().%s)> {\n' % (msg.name, oneof.name)
+                yield '    template <class Visitor>'
+                yield '    static bool apply(Visitor&& v, const decltype(%s().%s)& oneof) {\n' % (msg.name, oneof.name)
+                yield '        switch (which(oneof)) {\n'
                 for field in oneof.fields:
-                    yield '        case %s:\n' % field.tag_identifier
-                    yield '            std::forward<Visitor>(v)(oneof.%s);\n' % field.name
-                    yield '            break;\n'
-                yield '        default:\n'
-                yield '            return false;\n'
-                yield '    }\n'
-                yield '    return true;\n'
-                yield '}\n\n'
+                    yield '            case %s:\n' % field.tag_identifier
+                    yield '                std::forward<Visitor>(v)(oneof.%s);\n' % field.name
+                    yield '                break;\n'
+                yield '            default:\n'
+                yield '                return false;\n'
+                yield '        }\n'
+                yield '        return true;\n'
+                yield '    }'
+                yield '};\n}\n\n'
 
                 for field in oneof.fields:
                     # FIXME: If the oneof is not an "alternative" (i.e., it contains two fields of

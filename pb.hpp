@@ -16,8 +16,15 @@ constexpr const pb_field_t* field_array_ptr(const Struct&);
 // provides type safety to code which introspects the message structure (e.g., decode, encode).
 // Specialized for every message struct type in generated code.
 
-// For every oneof in a Nanopb message, an overload of the following function is generated:
-//   template <class Visitor> bool visit(Visitor&& v, unspecified_oneof_type& oneof);
+template <class Visitor, class Oneof>
+bool visit(Visitor&& v, const Oneof& oneof);
+// For oneofs whose possible values are each of distinct types, you can visit the value by calling
+//
+//   if (!visit(f, oneof)) { /* oneof contains an unrecognized type */ }
+//
+// with an `f` object which overloads its operator()(const T&) for every possible
+// oneof value type. `util::overload()` can be useful in preparing such an `f` from lambdas, or you
+// can implement a class with the appropriate overloads.
 
 #define PB_define_decode_function(func) \
     template <class Struct> \
@@ -40,6 +47,21 @@ PB_define_encode_function(encode_delimited)
 
 #undef PB_define_encode_function
 #undef PB_define_decode_function
+
+// =======================================================================================
+// Inline implementation
+
+namespace _ {
+
+template <class T>
+struct visitor_impl;
+
+}  // _
+
+template <class Visitor, class Oneof>
+bool visit(Visitor&& v, const Oneof& oneof) {
+    return _::visitor_impl<Oneof>::apply(std::forward<Visitor>(v), oneof);
+}
 
 }  // nanopb
 
