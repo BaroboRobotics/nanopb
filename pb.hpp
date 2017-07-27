@@ -8,6 +8,8 @@
 #include "pb_decode.h"
 #include "pb_encode.h"
 
+#include <utility>
+
 namespace nanopb {
 
 template <class Struct>
