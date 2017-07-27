@@ -26,6 +26,7 @@ message Message3
 {
     option (nanopb_msgopt).msgid = 103;
     required string fieldsize = 1 [(nanopb).max_size = 40];
+    required string fieldlen = 2 [(nanopb).max_length = 40];
 }
 
 // Forced callback field
@@ -87,5 +88,11 @@ message OneofMessage
     oneof foo {
         int32 bar = 1;
     }
+}
+
+// Proto3-style optional field in proto2 file
+message Proto3Field
+{
+    optional int32 proto3field = 1 [(nanopb).proto3 = true];
 }
 

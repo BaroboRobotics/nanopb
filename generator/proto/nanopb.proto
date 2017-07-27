@@ -16,7 +16,7 @@ enum FieldType {
     FT_POINTER = 4; // Always generate a dynamically allocated field.
     FT_STATIC = 2; // Generate a static field or raise an exception if not possible.
     FT_IGNORE = 3; // Ignore the field completely.
-    FT_INLINE = 5; // Always generate an inline array of fixed size.
+    FT_INLINE = 5; // Legacy option, use the separate 'fixed_length' option instead
 }
 
 enum IntSize {
@@ -32,7 +32,12 @@ enum IntSize {
 // fields.
 message NanoPBOptions {
   // Allocated size for 'bytes' and 'string' fields.
+  // For string fields, this should include the space for null terminator.
   optional int32 max_size = 1;
+  
+  // Maximum length for 'string' fields. Setting this is equivalent
+  // to setting max_size to a value of length+1.
+  optional int32 max_length = 14;
   
   // Allocated number of entries in arrays ('repeated' fields)
   optional int32 max_count = 2;
@@ -69,6 +74,12 @@ message NanoPBOptions {
 
   // Proto3 singular field does not generate a "has_" flag
   optional bool proto3 = 12 [default = false];
+
+  // Generate an enum->string mapping function (can take up lots of space).
+  optional bool enum_to_string = 13 [default = false];
+
+  // Generate bytes arrays with fixed length
+  optional bool fixed_length = 15 [default = false];
 }
 
 // Extensions to protoc 'Descriptor' type in order to define options

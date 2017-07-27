@@ -9,9 +9,9 @@ Nanopb is a small code-size Protocol Buffers implementation in ansi C. It is
 especially suitable for use in microcontrollers, but fits any memory
 restricted system.
 
-* **Homepage:** http://kapsi.fi/~jpa/nanopb/
-* **Documentation:** http://kapsi.fi/~jpa/nanopb/docs/
-* **Downloads:** http://kapsi.fi/~jpa/nanopb/download/
+* **Homepage:** https://jpa.kapsi.fi/nanopb/
+* **Documentation:** https://jpa.kapsi.fi/nanopb/docs/
+* **Downloads:** https://jpa.kapsi.fi/nanopb/download/
 * **Forum:** https://groups.google.com/forum/#!forum/nanopb
 
 
@@ -21,7 +21,7 @@ Using the nanopb library
 To use the nanopb library, you need to do two things:
 
 1. Compile your .proto files for nanopb, using protoc.
-2. Include pb_encode.c and pb_decode.c in your project.
+2. Include pb_encode.c, pb_decode.c and pb_common.c in your project.
 
 The easiest way to get started is to study the project in "examples/simple".
 It contains a Makefile, which should work directly under most Linux systems.
